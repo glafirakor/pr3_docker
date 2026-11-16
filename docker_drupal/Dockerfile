@@ -1,3 +1,6 @@
-FROM drupal:10-apache
-RUN sed -i 's/80/10000/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
+FROM php:8.2-cli-alpine
+WORKDIR /app
+RUN apk add --no-cache python3
+COPY app.py .
 EXPOSE 10000
+CMD ["python3", "app.py"]
