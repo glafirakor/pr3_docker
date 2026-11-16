@@ -1,5 +1,11 @@
-FROM maven:3.9-eclipse-temurin-17
+FROM maven:3.9-eclipse-temurin-17-alpine
 WORKDIR /app
-RUN mvn -version > /app/info.txt
+RUN apk add --no-cache python3 && mvn -version > /app/info.txt
 EXPOSE 10000
-CMD ["sh", "-c", "echo 'HTTP/1.1 200 OK\nContent-Type: text/plain; charset=utf-8\n\nПроект docker_maven успешно развернут на Render!\n' | cat - /app/info.txt > /app/resp.txt && while true; do nc -l -p 10000 -q 1 < /app/resp.txt 2>/dev/null || python3 -m http.server 10000 -d /app; done"]
+CMD ["python3", "-c", "from http.server import BaseHTTPRequestHandler, HTTPServer; import os; \
+info = open('/app/info.txt').read(); \
+class H(BaseHTTPRequestHandler): \
+  def do_GET(self): \
+    self.send_response(200); self.send_header('Content-type','text/html; charset=utf-8'); self.end_headers(); \
+    self.wfile.write(f'<h1>Проект docker_maven успешно развернут на Render!</h1><pre>{info}</pre>'.encode('utf-8')); \
+HTTPServer(('0.0.0.0', int(os.environ.get('PORT', 10000))), H).serve_forever()"]
